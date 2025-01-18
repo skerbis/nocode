@@ -7,17 +7,10 @@ if (!defined('REDAXO')) {
     die('Direct access denied!');
 }
 
-// Register default templates
-rex_addon::get('nocode')->setProperty('templates_registered', false);
-
+// Register default templates when packages are included
 rex_extension::register('PACKAGES_INCLUDED', function() {
-    // Check if templates are already registered to prevent double registration
-    if (rex_addon::get('nocode')->getProperty('templates_registered')) {
-        return;
-    }
-
     try {
-        // Register detail template
+        // Register news detail template
         Template::registerTemplate(
             'news_detail',
             'uikit3',
@@ -34,7 +27,7 @@ rex_extension::register('PACKAGES_INCLUDED', function() {
             'news/detail.php'
         );
 
-        // Register list template
+        // Register news list template
         Template::registerTemplate(
             'news_list',
             'uikit3',
@@ -73,9 +66,6 @@ rex_extension::register('PACKAGES_INCLUDED', function() {
             ],
             'news/list.php'
         );
-
-        // Mark templates as registered
-        rex_addon::get('nocode')->setProperty('templates_registered', true);
 
     } catch (\Exception $e) {
         // Log error but don't throw exception to prevent REDAXO from breaking
