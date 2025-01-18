@@ -6,6 +6,8 @@ class rex_api_nocode_get_template extends rex_api_function
 
     function execute()
     {
+        header('Content-Type: application/json');
+        
         $templateName = rex_request('template', 'string');
         
         if (!$templateName) {
@@ -46,13 +48,24 @@ class rex_api_nocode_get_template extends rex_api_function
                 $options = $template['fields']['options']['fields'];
             }
 
-            return rex_api_result::factory(true, [
-                'fields' => $fields,
-                'options' => $options
+            rex_response::cleanOutputBuffers();
+            
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'fields' => $fields,
+                    'options' => $options
+                ]
             ]);
+            exit;
             
         } catch (\Exception $e) {
-            throw new rex_api_exception($e->getMessage());
+            rex_response::cleanOutputBuffers();
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
+            exit;
         }
     }
 }
