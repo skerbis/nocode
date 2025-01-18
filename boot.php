@@ -3,7 +3,7 @@
 namespace KLXM\nocode;
 
 // Register default templates when packages are included
-rex_extension::register('PACKAGES_INCLUDED', function() {
+\rex_extension::register('PACKAGES_INCLUDED', function() {
     try {
         // Register news detail template
         Template::registerTemplate(
@@ -64,6 +64,6 @@ rex_extension::register('PACKAGES_INCLUDED', function() {
 
     } catch (\Exception $e) {
         // Log error but don't throw exception to prevent REDAXO from breaking
-        rex_logger::logException($e);
+        \rex_logger::logException($e);
     }
-}, rex_extension::LATE);
+}, \rex_extension::LATE);
