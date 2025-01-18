@@ -17,7 +17,7 @@ class rex_api_nocode_get_fields extends rex_api_function
         try {
             $fields = $mapper->getTableFields($tableName);
             
-            return rex_api_result::factory(true, [
+            return self::createResult(true, [
                 'fields' => $fields
             ]);
             
