@@ -14,7 +14,7 @@ class Template
         array $options = []
     ): void {
         // Validate template file exists
-        $templatePath = rex_path::addon('nocode', 'templates/' . $framework . '/' . $templateFile);
+        $templatePath = \rex_path::addon('nocode', 'templates/' . $framework . '/' . $templateFile);
         if (!file_exists($templatePath)) {
             throw new \InvalidArgumentException("Template file not found: {$templatePath}");
         }
@@ -76,7 +76,7 @@ class Template
 
         // Use provided framework or template default
         $framework = $framework ?? $template['framework'];
-        $templatePath = rex_path::addon('nocode', 'templates/' . $framework . '/' . $template['template']);
+        $templatePath = \rex_path::addon('nocode', 'templates/' . $framework . '/' . $template['template']);
 
         // Extract data to make it available in template
         extract($data);
