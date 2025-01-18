@@ -1,10 +1,10 @@
 package: nocode
-version: '1.0.0'
+version: '1.0.0-dev'
 author: Your Name
 supportpage: https://github.com/your/repo
 
 requires:
-    redaxo: '^5.13'
+    redaxo: '^5.18.1'
     php:
         version: '>=8.2'
     packages:
