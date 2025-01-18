@@ -1,0 +1,204 @@
+<?php
+$templates = \KLXM\nocode\Template::getRegisteredTemplates();
+$yformMapper = new \KLXM\nocode\YFormMapper();
+
+// Verfügbare Layouts aus den Templates ermitteln
+$template_choices = [];
+foreach ($templates as $key => $template) {
+    $template_choices[$key] = $key; // TODO: Hier später schönere Namen verwenden
+}
+
+// Ausgabemenge Optionen
+$output_amounts = [
+    'single' => 'Einzelner Eintrag',
+    'limited' => 'Bestimmte Anzahl',
+    'all' => 'Alle Einträge'
+];
+
+// Alle yform Tabellen laden
+$yform_tables = rex_yform_manager_table::getAll();
+?>
+
+<div class="rex-form">
+    <!-- Template Auswahl -->
+    <div class="form-group">
+        <label>Template auswählen</label>
+        <select name="REX_INPUT_VALUE[1]" class="form-control" id="template-select">
+            <option value="">Bitte wählen...</option>
+            <?php foreach ($template_choices as $key => $label): ?>
+                <option value="<?= $key ?>" <?= "REX_VALUE[1]" == $key ? 'selected' : '' ?>>
+                    <?= $label ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+
+    <!-- Inhaltsquelle -->
+    <div class="form-group">
+        <label>Inhaltsquelle</label>
+        <select name="REX_INPUT_VALUE[2]" class="form-control" id="content-source">
+            <option value="manual" <?= "REX_VALUE[2]" == 'manual' ? 'selected' : '' ?>>Manueller Inhalt</option>
+            <option value="yform" <?= "REX_VALUE[2]" == 'yform' ? 'selected' : '' ?>>YForm Tabelle</option>
+        </select>
+    </div>
+
+    <!-- YForm Content -->
+    <div id="yform-content" class="content-section">
+        <!-- Tabellen Auswahl -->
+        <div class="form-group">
+            <label>YForm Tabelle auswählen</label>
+            <select name="REX_INPUT_VALUE[3]" class="form-control" id="yform-table">
+                <option value="">Bitte wählen...</option>
+                <?php foreach ($yform_tables as $table): ?>
+                    <option value="<?= $table->getTableName() ?>" 
+                            <?= "REX_VALUE[3]" == $table->getTableName() ? 'selected' : '' ?>>
+                        <?= $table->getTableName() ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <!-- Ausgabemenge -->
+        <div class="form-group">
+            <label>Anzahl der Ausgaben</label>
+            <select name="REX_INPUT_VALUE[4]" class="form-control" id="output-amount">
+                <?php foreach ($output_amounts as $key => $label): ?>
+                    <option value="<?= $key ?>" <?= "REX_VALUE[4]" == $key ? 'selected' : '' ?>>
+                        <?= $label ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <!-- Anzahl bei limitierter Ausgabe -->
+        <div class="form-group" id="limit-amount" style="display: none;">
+            <label>Anzahl der Einträge</label>
+            <input type="number" name="REX_INPUT_VALUE[5]" value="REX_VALUE[5]" class="form-control" min="1">
+        </div>
+
+        <!-- Feld-Mapping Container -->
+        <div id="field-mapping">
+            <!-- Wird dynamisch via JavaScript befüllt -->
+        </div>
+    </div>
+
+    <!-- Template Options Container -->
+    <div id="template-options">
+        <!-- Wird dynamisch via JavaScript befüllt -->
+    </div>
+</div>
+
+<script>
+$(document).on('rex:ready', function() {
+    const $contentSource = $('#content-source');
+    const $yformContent = $('#yform-content');
+    const $yformTable = $('#yform-table');
+    const $templateSelect = $('#template-select');
+    const $outputAmount = $('#output-amount');
+    const $limitAmount = $('#limit-amount');
+    const $fieldMapping = $('#field-mapping');
+    const $templateOptions = $('#template-options');
+    
+    // Initial state
+    toggleContentSections();
+    toggleLimitAmount();
+    
+    // Event handlers
+    $contentSource.on('change', toggleContentSections);
+    $outputAmount.on('change', toggleLimitAmount);
+    $yformTable.on('change', loadYformFields);
+    $templateSelect.on('change', loadTemplateFields);
+    
+    // Load initial state if values are set
+    if ($yformTable.val()) {
+        loadYformFields();
+    }
+    if ($templateSelect.val()) {
+        loadTemplateFields();
+    }
+    
+    function toggleContentSections() {
+        if ($contentSource.val() === 'yform') {
+            $yformContent.show();
+        } else {
+            $yformContent.hide();
+        }
+    }
+    
+    function toggleLimitAmount() {
+        if ($outputAmount.val() === 'limited') {
+            $limitAmount.show();
+        } else {
+            $limitAmount.hide();
+        }
+    }
+    
+    function loadYformFields() {
+        const table = $yformTable.val();
+        if (!table) return;
+        
+        $.ajax({
+            url: window.location.href,
+            type: 'POST',
+            data: {
+                'rex-api-call': 'nocode_get_fields',
+                table: table
+            },
+            success: function(response) {
+                updateFieldMapping(response.fields);
+            }
+        });
+    }
+    
+    function loadTemplateFields() {
+        const template = $templateSelect.val();
+        if (!template) return;
+        
+        $.ajax({
+            url: window.location.href,
+            type: 'POST',
+            data: {
+                'rex-api-call': 'nocode_get_template',
+                template: template
+            },
+            success: function(response) {
+                updateFieldMapping(response.fields);
+                updateTemplateOptions(response.options);
+            }
+        });
+    }
+    
+    function updateFieldMapping(fields) {
+        // TODO: Implement field mapping UI
+        console.log('Fields:', fields);
+    }
+    
+    function updateTemplateOptions(options) {
+        // TODO: Implement template options UI
+        console.log('Options:', options);
+    }
+});
+</script>
+
+<style>
+.rex-form {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 25px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.content-section {
+    padding: 15px;
+    margin-top: 15px;
+    border-radius: 4px;
+    background: #f8f9fa;
+}
+
+#yform-content {
+    border-left: 3px solid #4299e1;
+}
+</style>
