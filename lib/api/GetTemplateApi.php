@@ -1,23 +1,22 @@
 <?php
-namespace KLXM\nocode;
 
-class NoCodeGetTemplate extends \rex_api_function
+class rex_api_nocode_get_template extends rex_api_function
 {
     protected $published = true;
 
     function execute()
     {
-        $templateName = \rex_request('template', 'string');
+        $templateName = rex_request('template', 'string');
         
         if (!$templateName) {
-            throw new \rex_api_exception('Kein Template angegeben');
+            throw new rex_api_exception('Kein Template angegeben');
         }
 
         try {
-            $template = Template::getTemplate($templateName);
+            $template = \KLXM\nocode\Template::getTemplate($templateName);
             
             if (!$template) {
-                throw new \rex_api_exception('Template nicht gefunden');
+                throw new rex_api_exception('Template nicht gefunden');
             }
 
             // Extrahiere die Felder und Optionen
@@ -47,13 +46,13 @@ class NoCodeGetTemplate extends \rex_api_function
                 $options = $template['fields']['options']['fields'];
             }
 
-            return \rex_api_result::factory(true, [
+            return rex_api_result::factory(true, [
                 'fields' => $fields,
                 'options' => $options
             ]);
             
         } catch (\Exception $e) {
-            throw new \rex_api_exception($e->getMessage());
+            throw new rex_api_exception($e->getMessage());
         }
     }
 }
