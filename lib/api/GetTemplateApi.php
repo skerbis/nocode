@@ -46,14 +46,10 @@ class rex_api_nocode_get_template extends rex_api_function
                 $options = $template['fields']['options']['fields'];
             }
 
-            echo json_encode([
-                'success' => true,
-                'data' => [
-                    'fields' => $fields,
-                    'options' => $options
-                ]
+            return rex_api_result::factory(true, [
+                'fields' => $fields,
+                'options' => $options
             ]);
-            exit;
             
         } catch (\Exception $e) {
             throw new rex_api_exception($e->getMessage());
