@@ -2,11 +2,6 @@
 
 namespace KLXM\nocode;
 
-// Prevent direct access
-if (!defined('REDAXO')) {
-    die('Direct access denied!');
-}
-
 // Register default templates when packages are included
 rex_extension::register('PACKAGES_INCLUDED', function() {
     try {
