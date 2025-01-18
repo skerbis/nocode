@@ -7,7 +7,7 @@ class GetTemplateApi extends \rex_api_function
 
     function execute()
     {
-        $templateName = rex_request('template', 'string');
+        $templateName = \rex_request('template', 'string');
         
         if (!$templateName) {
             throw new \rex_api_exception('Kein Template angegeben');
