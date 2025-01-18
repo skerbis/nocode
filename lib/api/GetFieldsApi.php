@@ -1,7 +1,7 @@
 <?php
 namespace KLXM\nocode;
 
-class GetFieldsApi extends \rex_api_function
+class NoCodeGetFields extends \rex_api_function
 {
     protected $published = true;
 
