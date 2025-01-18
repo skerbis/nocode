@@ -6,6 +6,8 @@ class rex_api_nocode_get_fields extends rex_api_function
 
     function execute()
     {
+        header('Content-Type: application/json');
+        
         $tableName = rex_request('table', 'string');
         
         if (!$tableName) {
@@ -17,12 +19,23 @@ class rex_api_nocode_get_fields extends rex_api_function
         try {
             $fields = $mapper->getTableFields($tableName);
             
-            return rex_api_result::factory(true, [
-                'fields' => $fields
+            rex_response::cleanOutputBuffers();
+            
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'fields' => $fields
+                ]
             ]);
+            exit;
             
         } catch (\Exception $e) {
-            throw new rex_api_exception($e->getMessage());
+            rex_response::cleanOutputBuffers();
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
+            exit;
         }
     }
 }
