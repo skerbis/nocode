@@ -46,7 +46,7 @@ class rex_api_nocode_get_template extends rex_api_function
                 $options = $template['fields']['options']['fields'];
             }
 
-            return rex_api_result::factory(true, [
+            return self::createResult(true, [
                 'fields' => $fields,
                 'options' => $options
             ]);
