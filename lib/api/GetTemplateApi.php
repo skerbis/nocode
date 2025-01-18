@@ -1,7 +1,7 @@
 <?php
 namespace KLXM\nocode;
 
-class GetTemplateApi extends \rex_api_function
+class NoCodeGetTemplate extends \rex_api_function
 {
     protected $published = true;
 
