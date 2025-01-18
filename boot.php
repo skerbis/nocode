@@ -82,15 +82,3 @@ rex_extension::register('PACKAGES_INCLUDED', function() {
         rex_logger::logException($e);
     }
 }, rex_extension::LATE);
-
-// Create necessary directories on addon installation
-if (rex::isBackend()) {
-    rex_extension::register('ADDON_INSTALLED', function($ep) {
-        if ($ep->getParam('addon')->getName() === 'nocode') {
-            $templateDir = rex_path::addonData('nocode', 'templates/uikit3/news');
-            if (!file_exists($templateDir)) {
-                rex_dir::create($templateDir);
-            }
-        }
-    });
-}
