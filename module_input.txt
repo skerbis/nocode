@@ -17,6 +17,10 @@ $output_amounts = [
 
 // Alle yform Tabellen laden
 $yform_tables = rex_yform_manager_table::getAll();
+
+// Gespeicherte Mappings
+$savedMappings = "REX_VALUE[6]" != '' ? json_decode("REX_VALUE[6]", true) : [];
+$savedOptions = "REX_VALUE[7]" != '' ? json_decode("REX_VALUE[7]", true) : [];
 ?>
 
 <div class="rex-form">
@@ -78,13 +82,13 @@ $yform_tables = rex_yform_manager_table::getAll();
 
         <!-- Feld-Mapping Container -->
         <div id="field-mapping">
-            <!-- Wird dynamisch via JavaScript befüllt -->
+            <input type="hidden" name="REX_INPUT_VALUE[6]" id="field-mapping-data" value="REX_VALUE[6]">
         </div>
     </div>
 
     <!-- Template Options Container -->
     <div id="template-options">
-        <!-- Wird dynamisch via JavaScript befüllt -->
+        <input type="hidden" name="REX_INPUT_VALUE[7]" id="template-options-data" value="REX_VALUE[7]">
     </div>
 </div>
 
@@ -98,6 +102,18 @@ $(document).on('rex:ready', function() {
     const $limitAmount = $('#limit-amount');
     const $fieldMapping = $('#field-mapping');
     const $templateOptions = $('#template-options');
+    const $fieldMappingData = $('#field-mapping-data');
+    const $templateOptionsData = $('#template-options-data');
+    
+    // Gespeicherte Daten
+    let savedMappings = {};
+    let savedOptions = {};
+    try {
+        savedMappings = JSON.parse($fieldMappingData.val() || '{}');
+        savedOptions = JSON.parse($templateOptionsData.val() || '{}');
+    } catch (e) {
+        console.error('Error parsing saved data:', e);
+    }
     
     // Initial state
     toggleContentSections();
@@ -110,10 +126,8 @@ $(document).on('rex:ready', function() {
     $templateSelect.on('change', loadTemplateFields);
     
     // Load initial state if values are set
-    if ($yformTable.val()) {
+    if ($yformTable.val() && $templateSelect.val()) {
         loadYformFields();
-    }
-    if ($templateSelect.val()) {
         loadTemplateFields();
     }
     
@@ -145,7 +159,9 @@ $(document).on('rex:ready', function() {
                 table: table
             },
             success: function(response) {
-                updateFieldMapping(response.fields);
+                if (response.success) {
+                    updateFieldMapping($templateSelect.val(), response.data.fields);
+                }
             }
         });
     }
@@ -162,20 +178,121 @@ $(document).on('rex:ready', function() {
                 template: template
             },
             success: function(response) {
-                updateFieldMapping(response.fields);
-                updateTemplateOptions(response.options);
+                if (response.success) {
+                    if ($yformTable.val()) {
+                        loadYformFields();
+                    }
+                    updateTemplateOptions(response.data.options);
+                }
             }
         });
     }
     
-    function updateFieldMapping(fields) {
-        // TODO: Implement field mapping UI
-        console.log('Fields:', fields);
+    function updateFieldMapping(templateName, yformFields) {
+        if (!templateName) return;
+        
+        $.ajax({
+            url: window.location.href,
+            type: 'POST',
+            data: {
+                'rex-api-call': 'nocode_get_template',
+                template: templateName
+            },
+            success: function(response) {
+                if (!response.success) return;
+                
+                const templateFields = response.data.fields;
+                let html = '<div class="field-mapping-container">';
+                html += '<h3 class="field-mapping-title">Feld-Zuordnung</h3>';
+                
+                for (const [fieldName, field] of Object.entries(templateFields)) {
+                    html += `
+                        <div class="form-group">
+                            <label>${fieldName}${field.required ? ' *' : ''}</label>
+                            <select class="form-control field-mapping-select" 
+                                    data-field="${fieldName}">
+                                <option value="">Bitte wählen...</option>
+                    `;
+                    
+                    for (const [yformFieldName, yformField] of Object.entries(yformFields)) {
+                        const selected = savedMappings[fieldName] === yformFieldName ? 'selected' : '';
+                        html += `
+                            <option value="${yformFieldName}" ${selected}>
+                                ${yformField.label} [${yformField.type}]
+                            </option>
+                        `;
+                    }
+                    
+                    html += '</select></div>';
+                }
+                
+                html += '</div>';
+                $fieldMapping.html(html);
+                
+                // Event Handler für Mapping-Änderungen
+                $('.field-mapping-select').on('change', function() {
+                    const mappings = {};
+                    $('.field-mapping-select').each(function() {
+                        const field = $(this).data('field');
+                        const value = $(this).val();
+                        if (value) {
+                            mappings[field] = value;
+                        }
+                    });
+                    $fieldMappingData.val(JSON.stringify(mappings));
+                });
+            }
+        });
     }
     
     function updateTemplateOptions(options) {
-        // TODO: Implement template options UI
-        console.log('Options:', options);
+        if (!options || Object.keys(options).length === 0) {
+            $templateOptions.html('');
+            return;
+        }
+        
+        let html = '<div class="template-options-container">';
+        html += '<h3 class="template-options-title">Template-Optionen</h3>';
+        
+        for (const [optionName, option] of Object.entries(options)) {
+            html += `
+                <div class="form-group">
+                    <label>${optionName}</label>
+            `;
+            
+            if (option.type === 'select') {
+                html += `
+                    <select class="form-control template-option" data-option="${optionName}">
+                `;
+                for (const value of option.options) {
+                    const selected = savedOptions[optionName] === value ? 'selected' : '';
+                    html += `<option value="${value}" ${selected}>${value}</option>`;
+                }
+                html += '</select>';
+            } else if (option.type === 'boolean') {
+                const checked = savedOptions[optionName] ? 'checked' : '';
+                html += `
+                    <input type="checkbox" class="template-option" 
+                           data-option="${optionName}" ${checked}>
+                `;
+            }
+            
+            html += '</div>';
+        }
+        
+        html += '</div>';
+        $templateOptions.html(html);
+        
+        // Event Handler für Options-Änderungen
+        $('.template-option').on('change', function() {
+            const options = {};
+            $('.template-option').each(function() {
+                const option = $(this).data('option');
+                const value = $(this).is(':checkbox') ? $(this).is(':checked') : $(this).val();
+                options[option] = value;
+            });
+            $templateOptionsData.val(JSON.stringify(options));
+        });
     }
 });
 </script>
@@ -200,5 +317,21 @@ $(document).on('rex:ready', function() {
 
 #yform-content {
     border-left: 3px solid #4299e1;
+}
+
+.field-mapping-title,
+.template-options-title {
+    font-size: 1.1em;
+    margin: 20px 0 15px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.field-mapping-container,
+.template-options-container {
+    background: #fff;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 15px;
 }
 </style>
