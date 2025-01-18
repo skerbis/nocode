@@ -1,0 +1,64 @@
+<?php
+// Gespeicherte Werte abrufen
+$templateName = "REX_VALUE[1]";
+$contentSource = "REX_VALUE[2]";
+$tableName = "REX_VALUE[3]";
+$outputAmount = "REX_VALUE[4]";
+$limitCount = (int)"REX_VALUE[5]";
+$fieldMappings = json_decode("REX_VALUE[6]", true) ?: [];
+$templateOptions = json_decode("REX_VALUE[7]", true) ?: [];
+
+try {
+    // Prüfen ob Template ausgewählt wurde
+    if (!$templateName) {
+        throw new Exception('Kein Template ausgewählt');
+    }
+
+    // Template abrufen
+    $template = \KLXM\nocode\Template::getTemplate($templateName);
+    if (!$template) {
+        throw new Exception('Template nicht gefunden');
+    }
+
+    // Daten vorbereiten
+    $data = [];
+    
+    if ($contentSource === 'yform' && $tableName) {
+        // YForm Daten laden
+        $mapper = new \KLXM\nocode\YFormMapper();
+        
+        // Limit bestimmen
+        $limit = null;
+        if ($outputAmount === 'single') {
+            $limit = 1;
+        } elseif ($outputAmount === 'limited') {
+            $limit = $limitCount;
+        }
+        
+        // Daten mit Mapping abrufen
+        $data = $mapper->getTableData($tableName, $fieldMappings, null, $limit);
+        
+        // Bei Liste die Daten in items packen
+        if (isset($template['fields']['items'])) {
+            $data = ['items' => $data];
+        }
+        
+        // Template Optionen hinzufügen
+        if (!empty($templateOptions)) {
+            $data['options'] = $templateOptions;
+        }
+        
+    } else {
+        // Hier könnte später manueller Content verarbeitet werden
+        throw new Exception('Manueller Content noch nicht implementiert');
+    }
+    
+    // Template rendern
+    echo \KLXM\nocode\Template::renderTemplate($templateName, $data);
+    
+} catch (Exception $e) {
+    // Fehler nur im Backend anzeigen
+    if (rex::isBackend()) {
+        echo rex_view::error($e->getMessage());
+    }
+}
