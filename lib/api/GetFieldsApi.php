@@ -7,7 +7,7 @@ class GetFieldsApi extends \rex_api_function
 
     function execute()
     {
-        $tableName = rex_request('table', 'string');
+        $tableName = \rex_request('table', 'string');
         
         if (!$tableName) {
             throw new \rex_api_exception('Keine Tabelle angegeben');
