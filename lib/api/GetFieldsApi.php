@@ -17,9 +17,13 @@ class rex_api_nocode_get_fields extends rex_api_function
         try {
             $fields = $mapper->getTableFields($tableName);
             
-            return self::createResult(true, [
-                'fields' => $fields
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'fields' => $fields
+                ]
             ]);
+            exit;
             
         } catch (\Exception $e) {
             throw new rex_api_exception($e->getMessage());
